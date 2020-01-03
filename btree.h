@@ -38,13 +38,12 @@ typedef struct btree
 // when btree_seek called
 typedef struct btree_seek_coord
 {
-    int found; // true if strictly positive
     btree_node *node; // points to the holder if found, to the place it should be inserted if not
-    int pos;
+    int pos; // found if >= 0
 } btree_seek_coord;
 
 // return @ of an empty new created node
-btree_node* new_btree_node();
+btree_node* btree_new_node();
 
 // create new btree
 // alloc root node & init with comparator
@@ -61,6 +60,6 @@ int ArrayBSearch(bs_dtype *arr, int n_elts, bs_dtype val, int *found, int (*cmp_
 
 // return found, node & offset
 // if not found then node & offset are where the value should be stored at
-btree_seek_coord btree_seek(btree_dtype val);
+btree_seek_coord btree_seek(btree bt, btree_dtype val);
 
 #endif //C_BTREES_BTREE_H
