@@ -1,5 +1,5 @@
 //
-// Created by hbais on 1/3/2020.
+// Created by @hbFree on 1/3/2020.
 //
 
 #include "btree.h"
@@ -165,75 +165,85 @@ int btree_insert(btree *bt, btree_dtype val)
     if(sk.pos >= 0) // found ?
         return -1; // value already inserted
 
-    if(sk.node->n_elts < BTREE_DATA_MAX) // last accessed node has room for ?
+    btree_node *right = NULL;
+    while(sk.node != NULL)
     {
-        int i = sk.node->n_elts - 1;
-        for(; i >= 0; --i)
+        if(sk.node->n_elts < BTREE_DATA_MAX) // last accessed node has room for ?
         {
-            // move elements right till right place found
-            if(bt->comparator(sk.node->data[i], val) < 0)
-                break;
-            sk.node->data[i+1] = sk.node->data[i]; // move right
-            sk.node->kids[i+1] = sk.node->kids[i]; // move kids
+            int i = sk.node->n_elts - 1;
+            for(; i >= 0; --i)
+            {
+                // move elements right till right place found
+                if(bt->comparator(sk.node->data[i], val) < 0)
+                    break;
+                sk.node->data[i+1] = sk.node->data[i]; // move right
+                sk.node->kids[i+1] = sk.node->kids[i]; // move kids
+            }
+            sk.node->data[i+1] = val; // place node
+            sk.node->kids[i+2] = right; // place right node
+            sk.node->n_elts++;
+            return 1; // success
         }
-        sk.node->data[i+1] = val; // place node
-        sk.node->n_elts++;
-        return 1; // success
-    }
-    // if there's no room for then...
+        // if there's no room for then...
 
-    // alloc holder array
-    int array_len =  1 + sk.node->n_elts;
-    btree_dtype *seq = (btree_dtype *) malloc(sizeof(btree_dtype) * array_len);
+        // alloc holder array
+        int array_len =  1 + sk.node->n_elts;
+        btree_dtype *seq = (btree_dtype *) malloc(sizeof(btree_dtype) * array_len);
 
-    int inserted = 0; // val isn't yet inserted in the array
-    for(int i = 0; i < array_len - 1; )
-    {
-        btree_dtype tmp = sk.node->data[i];
-        if(inserted > 0 || bt->comparator(val, tmp) > 0) // if inserted or val > tmp
+        int inserted = 0; // val isn't yet inserted in the array
+        for(int i = 0; i < array_len - 1; )
         {
-            seq[i + inserted] = tmp;
-            ++i;
+            btree_dtype tmp = sk.node->data[i];
+            if(inserted > 0 || bt->comparator(val, tmp) > 0) // if inserted or val > tmp
+            {
+                seq[i + inserted] = tmp;
+                ++i;
+            }
+            else
+            {
+                seq[i] = val;
+                sk.node->kids[i + 1] = right; // insert right node
+                inserted = 1;
+            }
         }
-        else
+        if(!inserted)
+            seq[sk.node->n_elts] = val; // if not inserted then it shall be on the extreme right
+
+
+        // now split into two nodes
+        int nElts = sk.node->n_elts;
+        int middle_index = (nElts + 1) / 2;
+        btree_dtype middle_val = sk.node->data[middle_index];
+
+        // store left half into original node (left node)
+        sk.node->n_elts = middle_index;
+        memmove(sk.node->data, seq, middle_index);
+
+        // create the right node
+        btree_node *right_node = btree_new_node();
+        memmove(right_node->data, seq + middle_index + 1, sizeof(btree_dtype) * (nElts - middle_index)); // copy data
+        memmove(right_node->kids, sk.node->kids + middle_index + 1, sizeof(btree_dtype) * (nElts - middle_index)); // copy kids
+        right_node->n_elts = nElts - middle_index;
+
+        memset(sk.node->kids + middle_index, 0, nElts - middle_index); // nullify left node's rightest kids
+
+        // if has no parent
+        if(empty(p))
         {
-            seq[i] = val;
-            inserted = 1;
+            btree_node *parent = btree_new_node();
+            parent->n_elts = 1; // holds the middle value only
+            parent->data[0] = middle_val;
+            parent->kids[0] = sk.node; // left child
+            parent->kids[1] = right_node; // left child
+            bt->root = parent; // new root
+            return 1; // success
         }
+
+        right = right_node;
+        // if has parent
+        sk.node = pop(p);
+        free(seq);
     }
-    if(!inserted)
-        seq[sk.node->n_elts] = val; // if not inserted then it shall be on the extreme right
-
-
-    // now split into two nodes
-    int nElts = sk.node->n_elts;
-    int middle_index = (nElts + 1) / 2;
-    btree_dtype middle_val = sk.node->data[middle_index];
-
-    // store left half into original node (left node)
-    sk.node->n_elts = middle_index;
-    memmove(sk.node->data, seq, middle_index);
-
-    // create the right node
-    btree_node *right_node = btree_new_node();
-    memmove(right_node->data, seq + middle_index + 1, sizeof(btree_dtype) * (nElts - middle_index)); // copy data
-    memmove(right_node->kids, sk.node->kids + middle_index + 1, sizeof(btree_dtype) * (nElts - middle_index)); // copy kids
-    right_node->n_elts = nElts - middle_index;
-
-    memset(sk.node->kids + middle_index, 0, nElts - middle_index); // nullify left node's rightest kids
-
-    if(empty(p))
-    {
-        btree_node *parent = btree_new_node();
-        parent->n_elts = 1; // holds the middle value only
-        parent->data[0] = middle_val;
-        parent->kids[0] = sk.node; // left child
-        parent->kids[1] = right_node; // left child
-        bt->root = parent; // new root
-    }
-
-    // free memory
-    free(seq);
     pile_destroy(p);
-
+    return 1;
 }
