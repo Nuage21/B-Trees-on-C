@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define BTREE_DATA_MAX 5
 
@@ -61,5 +62,8 @@ int ArrayBSearch(bs_dtype *arr, int n_elts, bs_dtype val, int *found, int (*cmp_
 // return found, node & offset
 // if not found then node & offset are where the value should be stored at
 btree_seek_coord btree_seek(btree bt, btree_dtype val);
+
+// insert val to the b-tree bt
+int btree_insert(btree *bt, btree_dtype val);
 
 #endif //C_BTREES_BTREE_H
