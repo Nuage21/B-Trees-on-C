@@ -4,6 +4,59 @@
 
 #include "btree.h"
 
+
+pile* pile_init()
+{
+    pile *p = (pile *) malloc(sizeof(pile));
+    p->head = NULL;
+    return p;
+}
+
+
+// insert at beginning
+void push(pile *p, pile_dtype val)
+{
+    pnode *node = (pnode*) malloc(sizeof(pnode));
+    node->val = val;
+    node->next = p->head;
+    p->head = node;
+}
+
+
+// gotta check if empty before
+pile_dtype pop(pile *p)
+{
+    if(p->head) //  check not empty
+    {
+        pile_dtype ret = p->head->val;
+        pnode *tmp = p->head;
+        p->head = p->head->next;
+        free(tmp);
+        return ret;
+    }
+}
+
+int empty(pile *p)
+{
+    if(!p->head)
+        return 1; // empty
+    return 0;
+}
+
+void pile_destroy(pile *p)
+{
+    pnode *node = p->head;
+    while(node)
+    {
+        pnode *nxt = node->next;
+        free(node);
+        node = nxt;
+    }
+    p->head = NULL; // just in case used even after freed
+    free(p);
+}
+
+
 // return @ of an empty new created node
 btree_node* btree_new_node()
 {
@@ -63,7 +116,7 @@ int ArrayBSearch(bs_dtype *arr, int n_elts, bs_dtype val, int *found, int (*cmp_
 
 // return found, node & offset
 // if not found then node & offset are where the value should be stored at
-btree_seek_coord btree_seek(btree bt, btree_dtype val)
+btree_seek_coord btree_seek(btree bt, btree_dtype val, int _addPile, pile *p)
 {
     btree_seek_coord ret = {.node = NULL, .pos = -1};
     if(bt.root == NULL || bt.comparator == NULL)
@@ -83,7 +136,11 @@ btree_seek_coord btree_seek(btree bt, btree_dtype val)
         return ret;
     // if has then seek at
     btree kid_btree = {.root = bt.root->kids[shd_be_placed], .comparator = bt.comparator};
-    return btree_seek(kid_btree, val);
+
+    if(_addPile > 0)
+        push(p, bt.root);
+
+    return btree_seek(kid_btree, val, _addPile, p);
 }
 
 // insert val to the b-tree bt
@@ -102,7 +159,9 @@ int btree_insert(btree *bt, btree_dtype val)
         return 1; // success
     }
 
-    btree_seek_coord sk = btree_seek(*bt, val); // first of all search if it exists
+    pile *p = pile_init(); // will contains the ascendants of the node which it should be in
+    btree_seek_coord sk = btree_seek(*bt, val, 1, p); // first of all search if it exists
+
     if(sk.pos >= 0) // found ?
         return -1; // value already inserted
 
@@ -124,8 +183,8 @@ int btree_insert(btree *bt, btree_dtype val)
     // if there's no room for then...
 
     // alloc holder array
-    int array_len = sizeof(btree_dtype) * (1 + sk.node->n_elts);
-    btree_dtype *seq = (btree_dtype *) malloc(array_len);
+    int array_len =  1 + sk.node->n_elts;
+    btree_dtype *seq = (btree_dtype *) malloc(sizeof(btree_dtype) * array_len);
 
     int inserted = 0; // val isn't yet inserted in the array
     for(int i = 0; i < array_len - 1; )
@@ -145,6 +204,7 @@ int btree_insert(btree *bt, btree_dtype val)
     if(!inserted)
         seq[sk.node->n_elts] = val; // if not inserted then it shall be on the extreme right
 
+
     // now split into two nodes
     int nElts = sk.node->n_elts;
     int middle_index = (nElts + 1) / 2;
@@ -156,14 +216,24 @@ int btree_insert(btree *bt, btree_dtype val)
 
     // create the right node
     btree_node *right_node = btree_new_node();
-    memmove(right_node->data, seq + middle_index + 1, nElts - middle_index - 1); // copy data
-    memmove(right_node->kids, sk.node->kids + middle_index + 1, nElts - middle_index - 1); // copy kids
-    right_node->n_elts = nElts - middle_index - 1;
+    memmove(right_node->data, seq + middle_index + 1, sizeof(btree_dtype) * (nElts - middle_index)); // copy data
+    memmove(right_node->kids, sk.node->kids + middle_index + 1, sizeof(btree_dtype) * (nElts - middle_index)); // copy kids
+    right_node->n_elts = nElts - middle_index;
 
     memset(sk.node->kids + middle_index, 0, nElts - middle_index); // nullify left node's rightest kids
 
+    if(empty(p))
+    {
+        btree_node *parent = btree_new_node();
+        parent->n_elts = 1; // holds the middle value only
+        parent->data[0] = middle_val;
+        parent->kids[0] = sk.node; // left child
+        parent->kids[1] = right_node; // left child
+        bt->root = parent; // new root
+    }
 
     // free memory
     free(seq);
+    pile_destroy(p);
 
 }

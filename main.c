@@ -1,27 +1,19 @@
 #include <stdio.h>
 #include "btree.h"
-#include "pile.h"
 
-int comparator(btree_dtype a, btree_dtype b)
+int main()
 {
-    // printf("Called %d vs %d\n", a.val, b.val);
-    if(a.val > b.val)
-        return 1;
-    if(a.val < b.val)
-        return -1;
-    return 0; // equality
-}
+    // test insertion
+    btree bt = btree_init(comparator);
 
-int main() {
+    for(int i = 0; i < BTREE_DATA_MAX + 1; i++)
+    {
+        btree_dtype v = {.val = i * 2};
+        btree_insert(&bt, v);
+        printf("%d inserted\n", i * 2);
+    }
+    for(int i = 0; i < bt.root->kids[0]->n_elts; i++)
+        printf("%d ", bt.root->kids[0]->data[i]);
 
-    pile *p = pile_init();
-    push(p, 23);
-    push(p, 2);
-    push(p, 5);
-
-    while(!empty(p)) // while not empty
-        printf("%d ", pop(p));
-
-    pile_destroy(p);
     return 0;
 }
