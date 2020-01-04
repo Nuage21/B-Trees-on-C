@@ -7,10 +7,7 @@
 
 // type of data used in B-Tree nodes
 // compare function gotta be given later
-typedef struct _btree_datatype
-{
-    int val;
-} btree_dtype;
+typedef int btree_dtype;
 
 
 // provide order relation
