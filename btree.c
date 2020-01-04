@@ -177,10 +177,11 @@ int btree_insert(btree *bt, btree_dtype val)
                 if(bt->comparator(sk.node->data[i], val) < 0)
                     break;
                 sk.node->data[i+1] = sk.node->data[i]; // move right
-                sk.node->kids[i+1] = sk.node->kids[i]; // move kids
+                sk.node->kids[i+2] = sk.node->kids[i+1]; // move kids
             }
             sk.node->data[i+1] = val; // place node
             sk.node->kids[i+2] = right; // place right node
+            int j = 0;
             sk.node->n_elts++;
             return 1; // success
         }
@@ -191,6 +192,7 @@ int btree_insert(btree *bt, btree_dtype val)
         btree_dtype *seq = (btree_dtype *) malloc(sizeof(btree_dtype) * array_len);
 
         int inserted = 0; // val isn't yet inserted in the array
+        int right_inserted = 0;
         for(int i = 0; i < array_len - 1; )
         {
             btree_dtype tmp = sk.node->data[i];
@@ -202,12 +204,19 @@ int btree_insert(btree *bt, btree_dtype val)
             else
             {
                 seq[i] = val;
-                sk.node->kids[i + 1] = right; // insert right node
+                if(!right_inserted)
+                {
+                    sk.node->kids[i + 1] = right; // insert right node
+                    right_inserted = 1;
+                }
                 inserted = 1;
             }
         }
         if(!inserted)
+        {
             seq[sk.node->n_elts] = val; // if not inserted then it shall be on the extreme right
+            sk.node->kids[sk.node->n_elts] = right; // if not inserted then it shall be on the extreme right
+        }
 
 
         // now split into two nodes
@@ -240,6 +249,7 @@ int btree_insert(btree *bt, btree_dtype val)
         }
 
         right = right_node;
+        val = middle_val; // new value to insert into parent
         // if has parent
         sk.node = pop(p);
         free(seq);
