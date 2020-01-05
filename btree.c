@@ -238,3 +238,21 @@ int btree_insert(btree *bt, btree_dtype val) {
     pile_destroy(p);
     return 1;
 }
+
+
+// return 1 if node is a leaf (doesn't have kids) - 0 if internal node
+int is_leaf(btree_node *node)
+{
+    if(!node)
+        return 0; // NULL isn't a node
+    int isLeaf = 1; // let's consider it an internal node (!leaf) and check if it is
+    for(int i = 0; i < node->n_elts + 1; ++i)
+        if(node->kids[i])
+            isLeaf = 0;
+    return isLeaf;
+}
+
+int btree_delete(btree *bt, btree_dtype val)
+{
+
+}

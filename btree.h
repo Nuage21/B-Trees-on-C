@@ -90,12 +90,21 @@ typedef btree_dtype bs_dtype; // specify data_type for search function
 int ArrayBSearch(bs_dtype *arr, int n_elts, bs_dtype val, int *found, int (*cmp_fnc)(bs_dtype, bs_dtype));
 
 
+// return 1 if node is a leaf (doesn't have kids) - 0 if internal node
+int is_leaf(btree_node *node);
+
+
 // return found, node & offset
 // if not found then node & offset are where the value should be stored at
 btree_seek_coord btree_seek(btree bt, btree_dtype val, int _addPile, pile *p);
 
 
 // insert val to the b-tree bt
+// return: 1 for success - 0 if an error occurs - -1 if the value already exist in the b-tree
 int btree_insert(btree *bt, btree_dtype val);
+
+// delete val from the b-tree bt
+// return: 1 for success - 0 if an error occurs - -1 if the value already exist in the b-tree
+int btree_delete(btree *bt, btree_dtype val);
 
 #endif //C_BTREES_BTREE_H
