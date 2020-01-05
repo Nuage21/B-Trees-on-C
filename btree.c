@@ -252,6 +252,54 @@ int is_leaf(btree_node *node)
     return isLeaf;
 }
 
+
+// gotta verify before if the two nodes at pos exist
+void redistribute_kids_at(btree_node *node, int pos, int sense)
+{
+    btree_node *left_node = node->kids[pos];
+    btree_node *right_node = node->kids[pos+1];
+    btree_dtype sep = node->data[pos]; // separator value
+
+    if(sense == REDISTRIBUTE_TO_RIGHT)
+    {
+        // redistribute left kid to its right brother
+
+        // move right
+        for(int i = right_node->n_elts; i >= 1 ; i--)
+        {
+            right_node->data[i] = right_node->data[i-1];
+            right_node->kids[i+1] = right_node->kids[i];
+        }
+        right_node->kids[1] = right_node->kids[0]; // first node gotta be moved right too
+        right_node->data[0] = sep;
+        right_node->kids[0] = left_node->kids[left_node->n_elts];
+        left_node->kids[left_node->n_elts] = NULL; // just in case some condition is made through
+        node->data[pos] = left_node->data[left_node->n_elts - 1];
+        right_node->n_elts++;
+        left_node->n_elts--;
+    }
+    else // REDISTRIBUTE_TO_LEFT
+    {
+        // redistribute right kid to its left brother
+        left_node->data[left_node->n_elts] = sep; // sep inserted as left's last value
+        node->data[pos] = right_node->data[0]; // first el replaces sep
+        left_node->kids[left_node->n_elts + 1] = right_node->kids[0];
+
+        right_node->n_elts--; // update total
+        // move left by 1 pos right_node's data & kids
+        for(int i = 0; i < right_node->n_elts; i++)
+        {
+            right_node->data[i] = right_node->data[i+1];
+            right_node->kids[i] = right_node->kids[i+1];
+        }
+        // last kid gotta be updated
+        right_node->kids[right_node->n_elts] = right_node->kids[right_node->n_elts+1];
+        right_node->kids[right_node->n_elts+1] = NULL; // just in case some condition was nmade through Nullity of a kid
+        left_node->n_elts++; // update total
+    }
+}
+
+
 int btree_delete(btree *bt, btree_dtype val)
 {
 

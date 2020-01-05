@@ -21,8 +21,9 @@ void show_node(btree_node *root)
 int main()
 {
     btree bt = btree_init(comparator);
-    for(int i = 0; i < 25; i++)
+    for(int i = 0; i < 15; i++)
         btree_insert(&bt, i);
+    redistribute_kids_at(bt.root, 0, REDISTRIBUTE_TO_RIGHT);
     show_node(bt.root);
     return 0;
 }

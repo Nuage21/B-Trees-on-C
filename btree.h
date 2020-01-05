@@ -94,6 +94,12 @@ int ArrayBSearch(bs_dtype *arr, int n_elts, bs_dtype val, int *found, int (*cmp_
 int is_leaf(btree_node *node);
 
 
+#define REDISTRIBUTE_TO_RIGHT 1
+#define REDISTRIBUTE_TO_LEFT -1
+// gotta verify before if the two nodes at pos exist
+void redistribute_kids_at(btree_node *node, int pos, int sense);
+
+
 // return found, node & offset
 // if not found then node & offset are where the value should be stored at
 btree_seek_coord btree_seek(btree bt, btree_dtype val, int _addPile, pile *p);
