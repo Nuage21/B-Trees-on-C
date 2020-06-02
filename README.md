@@ -5,11 +5,9 @@ A B-tree is a balanced tree data structure. B-Trees are mainly used in database 
 **B-trees-on-C** is a simple, optimized and structure-adaptable b-trees​ implementation in C.
 
 ## B-Tree illustration
----
 ![b-trees exemple illustrations](./.github/btrees.svg)
 
 ## Quick tour
----
 First provide a **data_type** by editing [data_type.h](./data_type.h) and a **comparator** in [data_type.c](./data_type.c)
 
 ```C
@@ -36,11 +34,12 @@ int comparator(btree_dtype a, btree_dtype b)
 }
 ```
 
-- Init a b-tree:
+## Init a b-tree
+```C
+btree bt = btree_init(comparator); 
+```
 
-` btree bt = btree_init(comparator); `
-
-- Insertion:
+## Insertion
 
 ```C 
 int status = btree_insert(&bt, value);
@@ -53,7 +52,7 @@ else // status == 0
     print("an error occured while trying to insert");
 ```
 
-- Search:
+## Search
 
 ```C
 btree_dtype value_to_seek = 25;
@@ -67,7 +66,7 @@ else
     print("value found at the node stored @%d and at offset %d", coord.node, coord.pos);
 ```
 
-- Delete a value from the tree:
+## Deletetion
 
 ```C
 int status = btree_delete(&bt, 25);
@@ -78,9 +77,12 @@ else if(status < 0)
 else // status
     printf("value not in the b-tree");
 ```
-- Destroy the tree (recursively):
 
-`btree_destroy(bt) // no return value`
+## Destroy the tree (recursively)
+
+```C
+btree_destroy(bt) // no return value
+```
 
 # Author
 
