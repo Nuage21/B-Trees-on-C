@@ -110,7 +110,7 @@ btree_seek_coord btree_seek(btree bt, btree_dtype val, int _addPile, pile *p);
 int btree_insert(btree *bt, btree_dtype val);
 
 // delete val from the b-tree bt
-// return: 1 for success - 0 if an error occurs - -1 if the value already exist in the b-tree
+// return: 1 for success - 0 if an error occurs - -1 if the value already doesn't exist in the b-tree
 int btree_delete(btree *bt, btree_dtype val);
 
 #endif //C_BTREES_BTREE_H
