@@ -1,3 +1,7 @@
 cmake-build-debug/*
 .idea/*
 CMakeLists.txt
+
+# Makefile's EXECUTABLE
+
+btest
