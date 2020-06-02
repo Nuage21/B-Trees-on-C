@@ -18,6 +18,8 @@ void show_node(btree_node *root)
     while(root->kids[i] && i < root->n_elts + 1)
         show_node(root->kids[i++]);
 }
+
+
 int main()
 {
     btree bt = btree_init(comparator);
