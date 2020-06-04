@@ -11,19 +11,9 @@ A B-tree is a balanced tree data structure. B-Trees are mainly used in database 
 First provide a **data_type** by editing [data_type.h](./data_type.h) and a **comparator** in [data_type.c](./data_type.c)
 
 ```C
-/* -----------------------
-    data_type.h
-   -----------------------
-*/
+typedef int btree_dtype; // @ data_type.h
 
-typedef int btree_dtype;
-
-/* -----------------------
-    data_type.c
-   -----------------------
-*/
-
-// provide order relation
+// provide order relation @ data_type.c
 int comparator(btree_dtype a, btree_dtype b)
 {
     if(a > b)
@@ -84,6 +74,6 @@ else // status
 btree_destroy(bt) // no return value
 ```
 
-# Author
+## Author
 
-This project was implemented by *Hakim Beldjoudi* (@hbFree).
+This project was implemented by *Hakim Beldjoudi* @hbFree.
